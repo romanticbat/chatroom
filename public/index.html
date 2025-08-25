@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🍓 수다방 🍏</title>
+  <style>
+    @font-face {
+      font-family: 'Baby Doll';
+      src: url('../Baby Doll.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    body {
+      background: #1e1e1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    * {
+      font-family: 'Baby Doll', cursive !important;
+    }
+
+    ::placeholder {
+      font-family: 'Baby Doll', cursive !important;
+      color: #ffb6c1;
+    }
+
+    .chat-container {
+      width: 400px;
+      height: 600px;
+      background: transparent;
+      border: 4px dashed #ff4d6d;
+      border-radius: 25px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0px 0px 20px rgba(255, 0, 100, 0.5);
+      backdrop-filter: blur(5px);
+    }
+
+    .chat-header {
+      background: linear-gradient(90deg, #ff6f91, #ff9671, #ffc75f, #f9f871);
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px dotted #ff4d6d;
+    }
+
+    .chat-header span {
+      font-size: 20px;
+      text-shadow: 2px 2px 0 #ff1744;
+    }
+
+    .profile-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+      transition: transform 0.2s;
+      object-fit: cover;
+    }
+
+    .profile-icon:hover {
+      transform: rotate(8deg) scale(1.1);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: url("images/background.png") repeat !important;
+      background-size: 150px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .message img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ff4d6d;
+      object-fit: cover;
+    }
+
+    .message-content {
+      max-width: 70%;
+    }
+
+    .message-username {
+      font-size: 13px;
+      color: #fff;
+      margin-bottom: 3px;
+      text-shadow: 1px 1px 0 #ff4d6d;
+    }
+
+    .message-text {
+      background: #ff80ab;
+      color: #fff;
+      padding: 10px;
+      border-radius: 15px;
+      font-size: 15px;
+      font-weight: bold;
+      border: 2px dashed #fff;
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: #666;
+      margin-top: 3px;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 3px dotted #ff4d6d;
+      padding: 10px;
+      background: #fff0f5;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ffb6c1;
+      border-radius: 20px;
+      margin-right: 10px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    .chat-input button {
+      background: #ff4d6d;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 2px 2px 0 #c2185b;
+    }
+
+    .chat-input button:hover {
+      background: #ff1744;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff0f5;
+      padding: 20px;
+      border-radius: 15px;
+      width: 300px;
+      text-align: center;
+      color: #ff4d6d;
+      border: 3px dashed #ff80ab;
+    }
+
+    .modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 2px solid #ffb6c1;
+      border-radius: 10px;
+      background: #fff;
+      color: #333;
+    }
+
+    .modal-content button {
+      background: #ff4d6d;
+      border: none;
+      padding: 10px 15px;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .message.you {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
+
+    .message.you .message-text {
+      background: #81c784;
+      border: 2px dashed #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span>🍓 수다방 🍏</span>
+      <img src="images/profile.png" alt="Perfil" class="profile-icon" onclick="openModal()">
+    </div>
+
+    <div class="chat-messages" id="chat-messages"></div>
+
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Send a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <h3>Edit Profile 🍒</h3>
+      <input type="text" id="username" placeholder="Your Username">
+      <input type="text" id="iconUrl" placeholder="Avatar Link">
+      <button onclick="saveProfile()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- Importar socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+    const chatMessages = document.getElementById("chat-messages");
+    const messageInput = document.getElementById("message-input");
+    const modal = document.getElementById("profileModal");
+
+    let username = "Haru";
+    let iconUrl = "images/icon.png";
+
+    function addMessage(msg, isYou = false) {
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message");
+      if (isYou) messageDiv.classList.add("you");
+
+      messageDiv.innerHTML = `
+        <img src="${msg.avatar}" alt="icon">
+        <div class="message-content">
+          <div class="message-username">${msg.nick}${isYou ? " (You)" : ""}</div>
+          <div class="message-text">${msg.text}</div>
+          <div class="message-time">${msg.time}</div>
+        </div>
+      `;
+
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      socket.emit("chat message", text);
+      messageInput.value = "";
+    }
+
+    function openModal() {
+      modal.style.display = "flex";
+    }
+
+    function saveProfile() {
+      username = document.getElementById("username").value || username;
+      iconUrl = document.getElementById("iconUrl").value || iconUrl;
+
+      socket.emit("register", { nick: username, avatar: iconUrl });
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(e) {
+      if (e.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // Receber histórico
+    socket.on("chat history", (historico) => {
+      historico.forEach((msg) => addMessage(msg, msg.nick === username));
+    });
+
+    // Receber novas mensagens
+    socket.on("chat message", (msg) => {
+      addMessage(msg, msg.nick === username);
+    });
+  </script>
+</body>
+</html>
