@@ -230,7 +230,7 @@
       <h3>Edit Profile 🍒</h3>
       <input type="text" id="username" placeholder="Your Username">
       <input type="text" id="iconUrl" placeholder="Avatar Link">
-      <button onclick="saveProfile()">Salvar</button>
+      <button onclick="saveProfile()">Save</button>
     </div>
   </div>
 
@@ -245,6 +245,11 @@
 
     let username = "Haru";
     let iconUrl = "images/icon.png";
+    let myId = null;
+
+    socket.on("connect", () => {
+      myId = socket.id; // 🔑 salva meu id
+    });
 
     function addMessage(msg, isYou = false) {
       const messageDiv = document.createElement("div");
@@ -292,12 +297,12 @@
 
     // Receber histórico
     socket.on("chat history", (historico) => {
-      historico.forEach((msg) => addMessage(msg, msg.nick === username));
+      historico.forEach((msg) => addMessage(msg, msg.id === myId));
     });
 
     // Receber novas mensagens
     socket.on("chat message", (msg) => {
-      addMessage(msg, msg.nick === username);
+      addMessage(msg, msg.id === myId);
     });
   </script>
 </body>

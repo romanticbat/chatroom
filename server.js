@@ -7,28 +7,43 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-app.use(express.static("public")); // pasta frontend
+app.use(express.static("public")); // Pasta frontend (index.html, css, js, imagens, etc.)
 
-// Carregar histórico de mensagens de um JSON
+// =========================
+// Carregar histórico de mensagens
+// =========================
 let historico = [];
 if (fs.existsSync("historico.json")) {
-  historico = JSON.parse(fs.readFileSync("historico.json"));
+  try {
+    historico = JSON.parse(fs.readFileSync("historico.json", "utf8"));
+  } catch (err) {
+    console.error("Erro ao carregar histórico:", err);
+    historico = [];
+  }
 }
 
+// =========================
+// Conexão do Socket.IO
+// =========================
 io.on("connection", (socket) => {
-  console.log("Novo usuário conectado");
+  console.log("Novo usuário conectado:", socket.id);
 
   // Enviar histórico para o novo cliente
   socket.emit("chat history", historico);
 
-  // Receber nickname e avatar
+  // Registro de usuário (nickname + avatar)
   socket.on("register", (user) => {
-    socket.data.user = user; // salva dados no socket
+    socket.data.user = {
+      nick: user.nick?.trim() || "Anônimo",
+      avatar: user.avatar || ""
+    };
+    console.log(`Usuário registrado: ${socket.data.user.nick}`);
   });
 
   // Receber mensagem
   socket.on("chat message", (msg) => {
     const user = socket.data.user || { nick: "Anônimo", avatar: "" };
+
     const mensagem = {
       nick: user.nick,
       avatar: user.avatar,
@@ -38,17 +53,23 @@ io.on("connection", (socket) => {
 
     // Salvar no histórico
     historico.push(mensagem);
+    if (historico.length > 100) historico.shift(); // mantém no máximo 100 mensagens
     fs.writeFileSync("historico.json", JSON.stringify(historico, null, 2));
 
-    // Enviar para todos
+    // Enviar para todos os clientes conectados
     io.emit("chat message", mensagem);
   });
 
+  // Usuário desconectou
   socket.on("disconnect", () => {
-    console.log("Usuário saiu");
+    console.log(`Usuário saiu: ${socket.data?.user?.nick || "Anônimo"} (${socket.id})`);
   });
 });
 
-server.listen(3000, () => {
-  console.log("Servidor rodando em http://localhost:3000");
+// =========================
+// Iniciar servidor
+// =========================
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
